@@ -1,0 +1,341 @@
+--// Serviços
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+--// Criar ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "VelozHuB"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = playerGui
+
+--// Painel principal
+local painel = Instance.new("Frame")
+painel.Size = UDim2.new(0,700,0,400)
+painel.Position = UDim2.new(0.5,-350,0.5,-200)
+painel.BackgroundColor3 = Color3.fromRGB(20,20,20)
+painel.BorderSizePixel = 0
+painel.Active = true
+painel.Parent = screenGui
+painel.Visible = true
+
+-- Painel quadrado
+local painelCorner = Instance.new("UICorner")
+painelCorner.CornerRadius = UDim.new(0,0)
+painelCorner.Parent = painel
+
+--// Título
+local titulo = Instance.new("TextLabel")
+titulo.Size = UDim2.new(0,250,0,50)
+titulo.Position = UDim2.new(0,60,0,0)
+titulo.BackgroundTransparency = 1
+titulo.Text = "VelozHuB"
+titulo.TextColor3 = Color3.fromRGB(255,255,255)
+titulo.Font = Enum.Font.SourceSansBold
+titulo.TextSize = 28
+titulo.TextXAlignment = Enum.TextXAlignment.Left
+titulo.Parent = painel
+
+-- Linha branca
+local linha = Instance.new("Frame")
+linha.Size = UDim2.new(1,0,0,2)
+linha.Position = UDim2.new(0,0,0,50)
+linha.BackgroundColor3 = Color3.fromRGB(255,255,255)
+linha.BorderSizePixel = 0
+linha.Parent = painel
+
+--// Pequenos raios caindo
+local raios = {}
+for i = 1,50 do
+	local raio = Instance.new("Frame")
+	raio.Size = UDim2.new(0,2,0,10)
+	raio.Position = UDim2.new(0,math.random(0,700),0,math.random(52,398))
+	raio.BackgroundColor3 = Color3.fromRGB(255,165,0)
+	raio.BorderSizePixel = 0
+	raio.Parent = painel
+	table.insert(raios,raio)
+end
+
+RunService.RenderStepped:Connect(function()
+	for _, r in pairs(raios) do
+		r.Position = r.Position + UDim2.new(0,0,0,2)
+		if r.Position.Y.Offset > 400 then
+			r.Position = UDim2.new(0,math.random(0,700),0,52)
+		end
+	end
+end)
+
+-- Função ativar botões
+function ativarBotao(botao, callback)
+	botao.InputBegan:Connect(function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			callback()
+		end
+	end)
+end
+
+-- Função criar toggle com bolinha
+local function criarToggle(nome, yPos)
+	local frame = Instance.new("Frame")
+	frame.Size = UDim2.new(0,250,0,40)
+	frame.Position = UDim2.new(0,60,0,yPos)
+	frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+	frame.BorderSizePixel = 0
+	frame.Parent = painel
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0,6)
+	corner.Parent = frame
+
+	local label = Instance.new("TextLabel")
+	label.Size = UDim2.new(0,150,1,0)
+	label.Position = UDim2.new(0,10,0,0)
+	label.BackgroundTransparency = 1
+	label.Text = nome
+	label.TextColor3 = Color3.fromRGB(255,255,255)
+	label.Font = Enum.Font.SourceSansBold
+	label.TextSize = 18
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Parent = frame
+
+	local toggleFrame = Instance.new("Frame")
+	toggleFrame.Size = UDim2.new(0,50,0,25)
+	toggleFrame.Position = UDim2.new(1,-60,0,7)
+	toggleFrame.BackgroundColor3 = Color3.fromRGB(100,100,100)
+	toggleFrame.Parent = frame
+	local toggleCorner = Instance.new("UICorner")
+	toggleCorner.CornerRadius = UDim.new(0,12)
+	toggleCorner.Parent = toggleFrame
+
+	local toggleCircle = Instance.new("Frame")
+	toggleCircle.Size = UDim2.new(0,23,0,23)
+	toggleCircle.Position = UDim2.new(0,1,0,1)
+	toggleCircle.BackgroundColor3 = Color3.fromRGB(255,0,0)
+	toggleCircle.Parent = toggleFrame
+	local circleCorner = Instance.new("UICorner")
+	circleCorner.CornerRadius = UDim.new(0,12)
+	circleCorner.Parent = toggleCircle
+
+	local ativo = false
+
+	local function toggle()
+		ativo = not ativo
+		if ativo then
+			toggleCircle:TweenPosition(UDim2.new(0.5,1,0,1), "Out", "Quad", 0.2, true)
+			toggleCircle.BackgroundColor3 = Color3.fromRGB(0,255,0)
+		else
+			toggleCircle:TweenPosition(UDim2.new(0,1,0,1), "Out", "Quad", 0.2, true)
+			toggleCircle.BackgroundColor3 = Color3.fromRGB(255,0,0)
+		end
+	end
+
+	ativarBotao(toggleFrame, toggle)
+
+	return frame, function() return ativo end
+end
+
+--// Criar toggles
+local modoSafeFrame, modoSafeFunc = criarToggle("MODO-SAFE",60)
+local noclipeFrame, noclipeFunc = criarToggle("NOCOLIPE",110)
+local zeroParedeFrame, zeroParedeFunc = criarToggle("Zero-Parede",160)
+local xrayFrame, xrayFunc = criarToggle("X-Ray",210)
+
+--// Aba ⚙️
+local botaoConfig = Instance.new("TextButton")
+botaoConfig.Size = UDim2.new(0,30,0,30)
+botaoConfig.Position = UDim2.new(1,-40,0,10)
+botaoConfig.Text = "⚙️"
+botaoConfig.Font = Enum.Font.SourceSansBold
+botaoConfig.TextSize = 24
+botaoConfig.TextColor3 = Color3.fromRGB(255,255,255)
+botaoConfig.BackgroundColor3 = Color3.fromRGB(80,80,80)
+botaoConfig.Parent = painel
+
+local abaConfig = Instance.new("Frame")
+abaConfig.Size = UDim2.new(0,200,0,200)
+abaConfig.Position = UDim2.new(1,10,0,50)
+abaConfig.BackgroundColor3 = Color3.fromRGB(30,30,30)
+abaConfig.Visible = false
+abaConfig.Parent = painel
+local cornerConfig = Instance.new("UICorner")
+cornerConfig.CornerRadius = UDim.new(0,6)
+cornerConfig.Parent = abaConfig
+
+botaoConfig.MouseButton1Click:Connect(function()
+	abaConfig.Visible = not abaConfig.Visible
+end)
+
+-- Blips (ativa X-Ray)
+local blipsFrame = Instance.new("Frame")
+blipsFrame.Size = UDim2.new(0,180,0,40)
+blipsFrame.Position = UDim2.new(0,10,0,10)
+blipsFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
+blipsFrame.Parent = abaConfig
+local cornerBlips = Instance.new("UICorner")
+cornerBlips.CornerRadius = UDim.new(0,6)
+cornerBlips.Parent = blipsFrame
+
+local labelBlips = Instance.new("TextLabel")
+labelBlips.Size = UDim2.new(0,120,1,0)
+labelBlips.Position = UDim2.new(0,10,0,0)
+labelBlips.BackgroundTransparency = 1
+labelBlips.Text = "Blips"
+labelBlips.TextColor3 = Color3.fromRGB(255,255,255)
+labelBlips.Font = Enum.Font.SourceSansBold
+labelBlips.TextSize = 18
+labelBlips.TextXAlignment = Enum.TextXAlignment.Left
+labelBlips.Parent = blipsFrame
+
+local toggleBlips = Instance.new("Frame")
+toggleBlips.Size = UDim2.new(0,50,0,25)
+toggleBlips.Position = UDim2.new(1,-60,0,7)
+toggleBlips.BackgroundColor3 = Color3.fromRGB(100,100,100)
+toggleBlips.Parent = blipsFrame
+local toggleCornerBlips = Instance.new("UICorner")
+toggleCornerBlips.CornerRadius = UDim.new(0,12)
+toggleCornerBlips.Parent = toggleBlips
+
+local toggleCircleBlips = Instance.new("Frame")
+toggleCircleBlips.Size = UDim2.new(0,23,0,23)
+toggleCircleBlips.Position = UDim2.new(0,1,0,1)
+toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(255,0,0)
+toggleCircleBlips.Parent = toggleBlips
+local circleCornerBlips = Instance.new("UICorner")
+circleCornerBlips.CornerRadius = UDim.new(0,12)
+circleCornerBlips.Parent = toggleCircleBlips
+
+local blipsAtivo = false
+ativarBotao(toggleBlips, function()
+	blipsAtivo = not blipsAtivo
+	if blipsAtivo then
+		toggleCircleBlips:TweenPosition(UDim2.new(0.5,1,0,1), "Out", "Quad", 0.2, true)
+		toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(0,255,0)
+	else
+		toggleCircleBlips:TweenPosition(UDim2.new(0,1,0,1), "Out", "Quad", 0.2, true)
+		toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(255,0,0)
+	end
+end)
+
+-- X-Ray só pega quando Blips ativo
+local function xrayAtivoFunc()
+	return blipsAtivo
+end
+
+-- Loop Zero-Parede
+RunService.Stepped:Connect(function()
+	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local hrp = player.Character.HumanoidRootPart
+		if zeroParedeFunc() then
+			for _, part in pairs(Workspace:GetDescendants()) do
+				if part:IsA("BasePart") and part.Position.Y < hrp.Position.Y + 5 and part.Position.Y > hrp.Position.Y -5 then
+					part.CanCollide = false
+				end
+			end
+		else
+			for _, part in pairs(Workspace:GetDescendants()) do
+				if part:IsA("BasePart") then
+					part.CanCollide = true
+				end
+			end
+		end
+	end
+end)
+
+-- Loop Noclipe
+local velocidadeNoclip = 50
+RunService.Stepped:Connect(function()
+	if noclipeFunc() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+		local hrp = player.Character.HumanoidRootPart
+		local cam = workspace.CurrentCamera
+		local move = Vector3.new()
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0,1,0) end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0,-1,0) end
+		if move.Magnitude > 0 then
+			hrp.Velocity = move.Unit * velocidadeNoclip
+		else
+			hrp.Velocity = Vector3.new(0,0,0)
+		end
+	end
+end)
+
+-- Loop X-Ray
+RunService.RenderStepped:Connect(function()
+	if xrayAtivoFunc() then
+		for _, plr in pairs(Players:GetPlayers()) do
+			if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+				local hrp = plr.Character.HumanoidRootPart
+				if not hrp:FindFirstChild("XRayBox") then
+					local box = Instance.new("BoxHandleAdornment")
+					box.Name = "XRayBox"
+					box.Adornee = hrp
+					box.AlwaysOnTop = true
+					box.ZIndex = 10
+					box.Size = Vector3.new(4,6,1)
+					box.Color3 = Color3.fromRGB(255,0,0)
+					box.Parent = hrp
+				end
+			end
+		end
+	end
+end)
+
+-- Botão Diminuir
+local botaoDiminuir = Instance.new("TextButton")
+botaoDiminuir.Size = UDim2.new(0,30,0,30)
+botaoDiminuir.Position = UDim2.new(1,-40,0,10)
+botaoDiminuir.BackgroundColor3 = Color3.fromRGB(80,80,80)
+botaoDiminuir.Text = "–"
+botaoDiminuir.Font = Enum.Font.SourceSansBold
+botaoDiminuir.TextSize = 24
+botaoDiminuir.TextColor3 = Color3.fromRGB(255,255,255)
+botaoDiminuir.Parent = painel
+
+local painelMinimizado = false
+local painelOriginalSize = painel.Size
+botaoDiminuir.MouseButton1Click:Connect(function()
+	painelMinimizado = not painelMinimizado
+	if painelMinimizado then
+		painel.Size = UDim2.new(0,200,0,50)
+	else
+		painel.Size = painelOriginalSize
+	end
+end)
+
+-- Tornar painel movível
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+titulo.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+		dragging = true
+		dragStart = input.Position
+		startPos = painel.Position
+		input.Changed:Connect(function()
+			if input.UserInputState == Enum.UserInputState.End then
+				dragging = false
+			end
+		end)
+	end
+end)
+
+titulo.InputChanged:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseMovement then
+		dragInput = input
+	end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if input == dragInput and dragging then
+		local delta = input.Position - dragStart
+		painel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+	end
+end)
