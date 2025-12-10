@@ -1,341 +1,350 @@
---// Serviços
+loadstring([[
+
+--=============================================
+-- ⚡ VELOZ.HUB — RETRÁTIL NEON AMARELO (Mod by Godofredo)
+-- UNIVERSAL · ANTI-DELETE BRUTO · DELTA MOBILE READY
+--=============================================
+
 local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
-local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-
+local TweenService = game:GetService("TweenService")
 local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
 
---// Criar ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "VelozHuB"
-screenGui.ResetOnSpawn = false
-screenGui.Parent = playerGui
+-- garante PlayerGui (necessário em vários executores mobile)
+repeat task.wait() until player and player:FindFirstChild("PlayerGui")
 
---// Painel principal
-local painel = Instance.new("Frame")
-painel.Size = UDim2.new(0,700,0,400)
-painel.Position = UDim2.new(0.5,-350,0.5,-200)
-painel.BackgroundColor3 = Color3.fromRGB(20,20,20)
-painel.BorderSizePixel = 0
-painel.Active = true
-painel.Parent = screenGui
-painel.Visible = true
-
--- Painel quadrado
-local painelCorner = Instance.new("UICorner")
-painelCorner.CornerRadius = UDim.new(0,0)
-painelCorner.Parent = painel
-
---// Título
-local titulo = Instance.new("TextLabel")
-titulo.Size = UDim2.new(0,250,0,50)
-titulo.Position = UDim2.new(0,60,0,0)
-titulo.BackgroundTransparency = 1
-titulo.Text = "VelozHuB"
-titulo.TextColor3 = Color3.fromRGB(255,255,255)
-titulo.Font = Enum.Font.SourceSansBold
-titulo.TextSize = 28
-titulo.TextXAlignment = Enum.TextXAlignment.Left
-titulo.Parent = painel
-
--- Linha branca
-local linha = Instance.new("Frame")
-linha.Size = UDim2.new(1,0,0,2)
-linha.Position = UDim2.new(0,0,0,50)
-linha.BackgroundColor3 = Color3.fromRGB(255,255,255)
-linha.BorderSizePixel = 0
-linha.Parent = painel
-
---// Pequenos raios caindo
-local raios = {}
-for i = 1,50 do
-	local raio = Instance.new("Frame")
-	raio.Size = UDim2.new(0,2,0,10)
-	raio.Position = UDim2.new(0,math.random(0,700),0,math.random(52,398))
-	raio.BackgroundColor3 = Color3.fromRGB(255,165,0)
-	raio.BorderSizePixel = 0
-	raio.Parent = painel
-	table.insert(raios,raio)
+-- remove se existir (garante clean)
+local function safeDestroy(inst)
+    if inst and inst.Parent then
+        pcall(function() inst:Destroy() end)
+    end
 end
 
-RunService.RenderStepped:Connect(function()
-	for _, r in pairs(raios) do
-		r.Position = r.Position + UDim2.new(0,0,0,2)
-		if r.Position.Y.Offset > 400 then
-			r.Position = UDim2.new(0,math.random(0,700),0,52)
-		end
-	end
-end)
+-- função que cria todo o hub (chamável para anti-delete)
+local function CriarHub()
+    -- limpa versão antiga
+    safeDestroy(player.PlayerGui:FindFirstChild("VelozHub"))
 
--- Função ativar botões
-function ativarBotao(botao, callback)
-	botao.InputBegan:Connect(function(input)
-		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-			callback()
-		end
-	end)
+    -- ================ ROOT GUI =================
+    local Gui = Instance.new("ScreenGui")
+    Gui.Name = "VelozHub"
+    Gui.ResetOnSpawn = false
+    Gui.IgnoreGuiInset = true
+    Gui.Parent = player:WaitForChild("PlayerGui")
+    Gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+    -- ================ MAIN BUTTON (FLUTUANTE) =================
+    local MainButton = Instance.new("TextButton")
+    MainButton.Name = "VeloButton"
+    MainButton.Size = UDim2.new(0,64,0,64)
+    MainButton.Position = UDim2.new(0.86,0,0.68,0)
+    MainButton.AnchorPoint = Vector2.new(0,0)
+    MainButton.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    MainButton.AutoButtonColor = false
+    MainButton.Text = "⚡"
+    MainButton.TextColor3 = Color3.fromRGB(255,255,0)
+    MainButton.TextScaled = true
+    MainButton.Font = Enum.Font.GothamBlack
+    MainButton.ZIndex = 50
+    MainButton.Parent = Gui
+
+    local btnCorner = Instance.new("UICorner", MainButton)
+    btnCorner.CornerRadius = UDim.new(0,36)
+
+    local btnStroke = Instance.new("UIStroke", MainButton)
+    btnStroke.Color = Color3.fromRGB(255,255,0)
+    btnStroke.Transparency = 0.6
+    btnStroke.Thickness = 2
+
+    local glowImg = Instance.new("ImageLabel", MainButton)
+    glowImg.AnchorPoint = Vector2.new(0.5,0.5)
+    glowImg.Position = UDim2.new(0.5,0,0.5,0)
+    glowImg.Size = UDim2.new(2.2,0,2.2,0)
+    glowImg.Image = "rbxassetid://1316045217"
+    glowImg.BackgroundTransparency = 1
+    glowImg.ZIndex = 48
+    glowImg.ImageColor3 = Color3.fromRGB(255,255,0)
+    glowImg.ImageTransparency = 0.8
+
+    -- ================ PANEL (RETRÁTIL - ABRE/FECHA) =================
+    local Panel = Instance.new("Frame")
+    Panel.Name = "VeloPanel"
+    Panel.Size = UDim2.new(0,360,0,320)
+    Panel.Position = UDim2.new(0.28,0,0.18,0)
+    Panel.BackgroundColor3 = Color3.fromRGB(15,15,15)
+    Panel.BorderSizePixel = 0
+    Panel.Visible = false
+    Panel.ZIndex = 45
+    Panel.Parent = Gui
+
+    local panelCorner = Instance.new("UICorner", Panel)
+    panelCorner.CornerRadius = UDim.new(0,12)
+
+    -- glow back for neon effect
+    local panelGlow = Instance.new("ImageLabel", Panel)
+    panelGlow.AnchorPoint = Vector2.new(0.5,0.5)
+    panelGlow.Position = UDim2.new(0.5,0,0.5,0)
+    panelGlow.Size = UDim2.new(1.6,0,1.6,0)
+    panelGlow.Image = "rbxassetid://1316045217"
+    panelGlow.BackgroundTransparency = 1
+    panelGlow.ImageColor3 = Color3.fromRGB(255,238,86) -- neon yellow
+    panelGlow.ImageTransparency = 0.92
+    panelGlow.ZIndex = 40
+
+    -- header title (two lines)
+    local Title = Instance.new("TextLabel", Panel)
+    Title.Name = "Title"
+    Title.Size = UDim2.new(1,0,0,48)
+    Title.Position = UDim2.new(0,0,0,6)
+    Title.BackgroundTransparency = 1
+    Title.TextColor3 = Color3.fromRGB(255,255,255)
+    Title.Text = "      Veloz.Hub\nmod by Godofredo"
+    Title.TextYAlignment = Enum.TextYAlignment.Top
+    Title.Font = Enum.Font.GothamBold
+    Title.TextScaled = true
+    Title.ZIndex = 46
+
+    local headerStroke = Instance.new("UIStroke", Title)
+    headerStroke.Color = Color3.fromRGB(255,238,86)
+    headerStroke.Transparency = 0.6
+    headerStroke.Thickness = 1.6
+
+    -- panel top bar for retract animation (acts like handle)
+    local TopBar = Instance.new("Frame", Panel)
+    TopBar.Size = UDim2.new(1,0,0,48)
+    TopBar.Position = UDim2.new(0,0,0,0)
+    TopBar.BackgroundTransparency = 1
+    TopBar.ZIndex = 47
+
+    -- ================ SCROLL + GRID (DUAS COLUNAS) =================
+    local Scroll = Instance.new("ScrollingFrame", Panel)
+    Scroll.Name = "Scroll"
+    Scroll.Position = UDim2.new(0,8,0,56)
+    Scroll.Size = UDim2.new(1,-16,1,-64)
+    Scroll.CanvasSize = UDim2.new(0,0,0,0)
+    Scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    Scroll.ScrollBarThickness = 4
+    Scroll.BackgroundTransparency = 1
+    Scroll.ZIndex = 44
+
+    local UIGrid = Instance.new("UIGridLayout", Scroll)
+    UIGrid.CellSize = UDim2.new(0,168,0,46)
+    UIGrid.FillDirectionMaxCells = 2
+    UIGrid.StartCorner = Enum.StartCorner.TopLeft
+    UIGrid.Padding = UDim2.new(0,6,0,6)
+
+    -- helper: create neon button
+    local function MakeButton(text, callback)
+        local B = Instance.new("TextButton")
+        B.Parent = Scroll
+        B.Size = UDim2.new(1,0,0,46)
+        B.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        B.TextColor3 = Color3.fromRGB(255,255,255)
+        B.Font = Enum.Font.GothamBold
+        B.TextScaled = true
+        B.Text = text
+        B.AutoButtonColor = false
+        B.ZIndex = 46
+
+        local corner = Instance.new("UICorner", B)
+        corner.CornerRadius = UDim.new(0,6)
+
+        local stroke = Instance.new("UIStroke", B)
+        stroke.Color = Color3.fromRGB(255,238,86)
+        stroke.Transparency = 0.85
+        stroke.Thickness = 1.8
+
+        -- subtle neon bar
+        local neonBar = Instance.new("Frame", B)
+        neonBar.Size = UDim2.new(0,6,1,0)
+        neonBar.Position = UDim2.new(0,0,0,0)
+        neonBar.BackgroundColor3 = Color3.fromRGB(255,238,86)
+        neonBar.BorderSizePixel = 0
+        neonBar.ZIndex = 47
+
+        -- pulse tween for neon bar & stroke
+        local tweenInfo = TweenInfo.new(0.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, true)
+        local t1 = TweenService:Create(neonBar, tweenInfo, {BackgroundTransparency = 0.35})
+        local t2 = TweenService:Create(stroke, tweenInfo, {Transparency = 0.25})
+        pcall(function() t1:Play(); t2:Play() end)
+
+        -- events (multiple handlers)
+        B.MouseButton1Click:Connect(function() pcall(callback) end)
+        B.Activated:Connect(function() pcall(callback) end)
+        return B
+    end
+
+    -- ================ FUNCTIONALITY: buttons as requested =================
+
+    -- flags / vars for local features
+    local flying = false
+    local flySpeed = 40
+    local noclip = false
+
+    -- Fly loader (external) fallback safe toggles
+    local function loadFly()
+        local ok, _ = pcall(function()
+            loadstring(game:HttpGet("https://pastebin.com/raw/YKL7EXeL"))()
+        end)
+        return ok
+    end
+
+    MakeButton("⚡ Fly", function()
+        local ok = loadFly()
+        if not ok then
+            flying = not flying
+            flySpeed = 40
+        end
+    end)
+
+    MakeButton("⚡ Fly Vel 40", function()
+        getgenv().FlySpeed = 40
+        loadFly()
+        flying = true; flySpeed = 40
+    end)
+
+    MakeButton("⚡ Fly Vel 80", function()
+        getgenv().FlySpeed = 80
+        loadFly()
+        flying = true; flySpeed = 80
+    end)
+
+    MakeButton("💨 Turbo (80)", function()
+        local c = player.Character
+        if c and c:FindFirstChild("Humanoid") then
+            c.Humanoid.WalkSpeed = 80
+        end
+    end)
+
+    MakeButton("💥 ESP", function()
+        pcall(function()
+            loadstring(game:HttpGet("https://raw.githubusercontent.com/K4LXT/ESP/main/ESP.lua"))()
+        end)
+    end)
+
+    MakeButton("🫥 Invisibilidade", function()
+        pcall(function()
+            loadstring(game:HttpGet("https://pastebin.com/raw/ZjA3ETFR"))()
+        end)
+    end)
+
+    MakeButton("👻 Noclip", function()
+        noclip = not noclip
+    end)
+
+    -- ================ Canvas auto update =================
+    local function UpdateCanvas()
+        local contentY = UIGrid.AbsoluteContentSize.Y
+        if contentY < Scroll.AbsoluteSize.Y then
+            Scroll.CanvasSize = UDim2.new(0,0,0,Scroll.AbsoluteSize.Y)
+        else
+            Scroll.CanvasSize = UDim2.new(0,0,0,contentY + 12)
+        end
+    end
+    UIGrid:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(UpdateCanvas)
+    Scroll.Changed:Connect(function(prop) if prop == "AbsoluteSize" then UpdateCanvas() end end)
+    task.spawn(UpdateCanvas)
+
+    -- ================ Running behaviors: fly & noclip =================
+    RunService.Heartbeat:Connect(function(dt)
+        local char = player.Character
+        if char and char:FindFirstChild("HumanoidRootPart") then
+            if flying then
+                local cam = workspace.CurrentCamera
+                if cam then
+                    local dir = cam.CFrame.LookVector
+                    -- move by small steps scaled by dt to be less intrusive
+                    pcall(function() char:TranslateBy(dir * (flySpeed * dt)) end)
+                end
+                if char:FindFirstChild("Humanoid") then
+                    char.Humanoid.PlatformStand = true
+                end
+            else
+                if char:FindFirstChild("Humanoid") then
+                    char.Humanoid.PlatformStand = false
+                end
+            end
+
+            if noclip then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then
+                        part.CanCollide = false
+                    end
+                end
+            end
+        end
+    end)
+
+    -- ================ TOGGLE MENU: multiple input handlers =================
+    local function ToggleMenu()
+        Panel.Visible = not Panel.Visible
+        -- small visual flash
+        pcall(function()
+            MainButton = MainButton or MainButton
+            local orig = MainButton.BackgroundColor3
+            MainButton.BackgroundColor3 = Color3.fromRGB(55,55,55)
+            task.delay(0.12, function() if MainButton and MainButton.Parent then MainButton.BackgroundColor3 = orig end)
+        end)
+    end
+
+    -- Primary binds
+    MainButton.MouseButton1Click:Connect(ToggleMenu)
+    MainButton.Activated:Connect(ToggleMenu)
+
+    -- Touch fallback: detect touches inside button bounds
+    UIS.TouchStarted:Connect(function(touch, processed)
+        if processed then return end
+        local pos = touch.Position
+        local absPos = MainButton.AbsolutePosition
+        local absSize = MainButton.AbsoluteSize
+        if pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y then
+            ToggleMenu()
+        end
+    end)
+
+    -- Input fallback for some executors
+    UIS.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            local pos = input.Position
+            local absPos = MainButton.AbsolutePosition
+            local absSize = MainButton.AbsoluteSize
+            if pos.X >= absPos.X and pos.X <= absPos.X + absSize.X and pos.Y >= absPos.Y and pos.Y <= absPos.Y + absSize.Y then
+                ToggleMenu()
+            end
+        end
+    end)
+
+    -- ensure ZOrder stays high (some games reset Gui parent visuals)
+    task.spawn(function()
+        while Gui and Gui.Parent do
+            pcall(function()
+                Gui.Parent = player:FindFirstChild("PlayerGui") or Gui.Parent
+            end)
+            task.wait(3)
+        end
+    end)
+
+    return Gui
 end
 
--- Função criar toggle com bolinha
-local function criarToggle(nome, yPos)
-	local frame = Instance.new("Frame")
-	frame.Size = UDim2.new(0,250,0,40)
-	frame.Position = UDim2.new(0,60,0,yPos)
-	frame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-	frame.BorderSizePixel = 0
-	frame.Parent = painel
-	local corner = Instance.new("UICorner")
-	corner.CornerRadius = UDim.new(0,6)
-	corner.Parent = frame
-
-	local label = Instance.new("TextLabel")
-	label.Size = UDim2.new(0,150,1,0)
-	label.Position = UDim2.new(0,10,0,0)
-	label.BackgroundTransparency = 1
-	label.Text = nome
-	label.TextColor3 = Color3.fromRGB(255,255,255)
-	label.Font = Enum.Font.SourceSansBold
-	label.TextSize = 18
-	label.TextXAlignment = Enum.TextXAlignment.Left
-	label.Parent = frame
-
-	local toggleFrame = Instance.new("Frame")
-	toggleFrame.Size = UDim2.new(0,50,0,25)
-	toggleFrame.Position = UDim2.new(1,-60,0,7)
-	toggleFrame.BackgroundColor3 = Color3.fromRGB(100,100,100)
-	toggleFrame.Parent = frame
-	local toggleCorner = Instance.new("UICorner")
-	toggleCorner.CornerRadius = UDim.new(0,12)
-	toggleCorner.Parent = toggleFrame
-
-	local toggleCircle = Instance.new("Frame")
-	toggleCircle.Size = UDim2.new(0,23,0,23)
-	toggleCircle.Position = UDim2.new(0,1,0,1)
-	toggleCircle.BackgroundColor3 = Color3.fromRGB(255,0,0)
-	toggleCircle.Parent = toggleFrame
-	local circleCorner = Instance.new("UICorner")
-	circleCorner.CornerRadius = UDim.new(0,12)
-	circleCorner.Parent = toggleCircle
-
-	local ativo = false
-
-	local function toggle()
-		ativo = not ativo
-		if ativo then
-			toggleCircle:TweenPosition(UDim2.new(0.5,1,0,1), "Out", "Quad", 0.2, true)
-			toggleCircle.BackgroundColor3 = Color3.fromRGB(0,255,0)
-		else
-			toggleCircle:TweenPosition(UDim2.new(0,1,0,1), "Out", "Quad", 0.2, true)
-			toggleCircle.BackgroundColor3 = Color3.fromRGB(255,0,0)
-		end
-	end
-
-	ativarBotao(toggleFrame, toggle)
-
-	return frame, function() return ativo end
-end
-
---// Criar toggles
-local modoSafeFrame, modoSafeFunc = criarToggle("MODO-SAFE",60)
-local noclipeFrame, noclipeFunc = criarToggle("NOCOLIPE",110)
-local zeroParedeFrame, zeroParedeFunc = criarToggle("Zero-Parede",160)
-local xrayFrame, xrayFunc = criarToggle("X-Ray",210)
-
---// Aba ⚙️
-local botaoConfig = Instance.new("TextButton")
-botaoConfig.Size = UDim2.new(0,30,0,30)
-botaoConfig.Position = UDim2.new(1,-40,0,10)
-botaoConfig.Text = "⚙️"
-botaoConfig.Font = Enum.Font.SourceSansBold
-botaoConfig.TextSize = 24
-botaoConfig.TextColor3 = Color3.fromRGB(255,255,255)
-botaoConfig.BackgroundColor3 = Color3.fromRGB(80,80,80)
-botaoConfig.Parent = painel
-
-local abaConfig = Instance.new("Frame")
-abaConfig.Size = UDim2.new(0,200,0,200)
-abaConfig.Position = UDim2.new(1,10,0,50)
-abaConfig.BackgroundColor3 = Color3.fromRGB(30,30,30)
-abaConfig.Visible = false
-abaConfig.Parent = painel
-local cornerConfig = Instance.new("UICorner")
-cornerConfig.CornerRadius = UDim.new(0,6)
-cornerConfig.Parent = abaConfig
-
-botaoConfig.MouseButton1Click:Connect(function()
-	abaConfig.Visible = not abaConfig.Visible
+-- =================== ANTI-DELETE BRUTO (Nível 3) ===================
+task.spawn(function()
+    while true do
+        -- se não existir, recria IMEDIATO
+        if not player or not player.Parent then break end
+        local exists = pcall(function() return player.PlayerGui:FindFirstChild("VelozHub") end)
+        if not exists or not player.PlayerGui:FindFirstChild("VelozHub") then
+            pcall(CriarHub)
+        end
+        task.wait(0.9) -- intervalo curto pra reagir rápido, sem travar
+    end
 end)
 
--- Blips (ativa X-Ray)
-local blipsFrame = Instance.new("Frame")
-blipsFrame.Size = UDim2.new(0,180,0,40)
-blipsFrame.Position = UDim2.new(0,10,0,10)
-blipsFrame.BackgroundColor3 = Color3.fromRGB(50,50,50)
-blipsFrame.Parent = abaConfig
-local cornerBlips = Instance.new("UICorner")
-cornerBlips.CornerRadius = UDim.new(0,6)
-cornerBlips.Parent = blipsFrame
+-- cria inicialmente
+pcall(CriarHub)
 
-local labelBlips = Instance.new("TextLabel")
-labelBlips.Size = UDim2.new(0,120,1,0)
-labelBlips.Position = UDim2.new(0,10,0,0)
-labelBlips.BackgroundTransparency = 1
-labelBlips.Text = "Blips"
-labelBlips.TextColor3 = Color3.fromRGB(255,255,255)
-labelBlips.Font = Enum.Font.SourceSansBold
-labelBlips.TextSize = 18
-labelBlips.TextXAlignment = Enum.TextXAlignment.Left
-labelBlips.Parent = blipsFrame
+print("⚡ VELOZ.HUB — UNIVERSAL (ANTI-DELETE BRUTO) carregado.")
 
-local toggleBlips = Instance.new("Frame")
-toggleBlips.Size = UDim2.new(0,50,0,25)
-toggleBlips.Position = UDim2.new(1,-60,0,7)
-toggleBlips.BackgroundColor3 = Color3.fromRGB(100,100,100)
-toggleBlips.Parent = blipsFrame
-local toggleCornerBlips = Instance.new("UICorner")
-toggleCornerBlips.CornerRadius = UDim.new(0,12)
-toggleCornerBlips.Parent = toggleBlips
-
-local toggleCircleBlips = Instance.new("Frame")
-toggleCircleBlips.Size = UDim2.new(0,23,0,23)
-toggleCircleBlips.Position = UDim2.new(0,1,0,1)
-toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(255,0,0)
-toggleCircleBlips.Parent = toggleBlips
-local circleCornerBlips = Instance.new("UICorner")
-circleCornerBlips.CornerRadius = UDim.new(0,12)
-circleCornerBlips.Parent = toggleCircleBlips
-
-local blipsAtivo = false
-ativarBotao(toggleBlips, function()
-	blipsAtivo = not blipsAtivo
-	if blipsAtivo then
-		toggleCircleBlips:TweenPosition(UDim2.new(0.5,1,0,1), "Out", "Quad", 0.2, true)
-		toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(0,255,0)
-	else
-		toggleCircleBlips:TweenPosition(UDim2.new(0,1,0,1), "Out", "Quad", 0.2, true)
-		toggleCircleBlips.BackgroundColor3 = Color3.fromRGB(255,0,0)
-	end
-end)
-
--- X-Ray só pega quando Blips ativo
-local function xrayAtivoFunc()
-	return blipsAtivo
-end
-
--- Loop Zero-Parede
-RunService.Stepped:Connect(function()
-	if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		local hrp = player.Character.HumanoidRootPart
-		if zeroParedeFunc() then
-			for _, part in pairs(Workspace:GetDescendants()) do
-				if part:IsA("BasePart") and part.Position.Y < hrp.Position.Y + 5 and part.Position.Y > hrp.Position.Y -5 then
-					part.CanCollide = false
-				end
-			end
-		else
-			for _, part in pairs(Workspace:GetDescendants()) do
-				if part:IsA("BasePart") then
-					part.CanCollide = true
-				end
-			end
-		end
-	end
-end)
-
--- Loop Noclipe
-local velocidadeNoclip = 50
-RunService.Stepped:Connect(function()
-	if noclipeFunc() and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-		local hrp = player.Character.HumanoidRootPart
-		local cam = workspace.CurrentCamera
-		local move = Vector3.new()
-		if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
-		if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
-		if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
-		if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
-		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0,1,0) end
-		if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move + Vector3.new(0,-1,0) end
-		if move.Magnitude > 0 then
-			hrp.Velocity = move.Unit * velocidadeNoclip
-		else
-			hrp.Velocity = Vector3.new(0,0,0)
-		end
-	end
-end)
-
--- Loop X-Ray
-RunService.RenderStepped:Connect(function()
-	if xrayAtivoFunc() then
-		for _, plr in pairs(Players:GetPlayers()) do
-			if plr ~= player and plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
-				local hrp = plr.Character.HumanoidRootPart
-				if not hrp:FindFirstChild("XRayBox") then
-					local box = Instance.new("BoxHandleAdornment")
-					box.Name = "XRayBox"
-					box.Adornee = hrp
-					box.AlwaysOnTop = true
-					box.ZIndex = 10
-					box.Size = Vector3.new(4,6,1)
-					box.Color3 = Color3.fromRGB(255,0,0)
-					box.Parent = hrp
-				end
-			end
-		end
-	end
-end)
-
--- Botão Diminuir
-local botaoDiminuir = Instance.new("TextButton")
-botaoDiminuir.Size = UDim2.new(0,30,0,30)
-botaoDiminuir.Position = UDim2.new(1,-40,0,10)
-botaoDiminuir.BackgroundColor3 = Color3.fromRGB(80,80,80)
-botaoDiminuir.Text = "–"
-botaoDiminuir.Font = Enum.Font.SourceSansBold
-botaoDiminuir.TextSize = 24
-botaoDiminuir.TextColor3 = Color3.fromRGB(255,255,255)
-botaoDiminuir.Parent = painel
-
-local painelMinimizado = false
-local painelOriginalSize = painel.Size
-botaoDiminuir.MouseButton1Click:Connect(function()
-	painelMinimizado = not painelMinimizado
-	if painelMinimizado then
-		painel.Size = UDim2.new(0,200,0,50)
-	else
-		painel.Size = painelOriginalSize
-	end
-end)
-
--- Tornar painel movível
-local dragging = false
-local dragInput
-local dragStart
-local startPos
-
-titulo.InputBegan:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-		dragging = true
-		dragStart = input.Position
-		startPos = painel.Position
-		input.Changed:Connect(function()
-			if input.UserInputState == Enum.UserInputState.End then
-				dragging = false
-			end
-		end)
-	end
-end)
-
-titulo.InputChanged:Connect(function(input)
-	if input.UserInputType == Enum.UserInputType.MouseMovement then
-		dragInput = input
-	end
-end)
-
-UserInputService.InputChanged:Connect(function(input)
-	if input == dragInput and dragging then
-		local delta = input.Position - dragStart
-		painel.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-	end
-end)
+]])()
